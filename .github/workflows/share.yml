@@ -1,0 +1,36 @@
+name: file
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install dependency
+        run: |
+          sudo apt update
+          sudo apt install wget unzip
+          mkdir /home/runner/nodejs
+          cd /home/runner/nodejs
+          wget https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-x64.tar.xz
+          tar xf node-v22.15.0-linux-x64.tar.xz
+          mv node-v22.15.0-linux-x64/* .
+      - name: pull git repo
+        run: |
+          cd /home/runner
+          wget https://github.com/0031400/vue-share/archive/refs/heads/master.zip
+          unzip master.zip
+      - name: build
+        run: |
+          cd /home/runner/vue-share-master
+          export PATH=/home/runner/nodejs/bin:$PATH
+          npm i
+          npm run build
+          tar cf site-1.0.tar.gz dist/*
+      - name: upload
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.token }}
+          tag_name: v1.0
+          files: |
+            /home/runner/vue-share-master/site-1.0.tar.gz
